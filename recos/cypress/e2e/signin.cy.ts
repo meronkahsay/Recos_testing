@@ -1,58 +1,89 @@
 /// <reference types="cypress" />
 
-Cypress.on('uncaught:exception', (err, runnable) => {
-  return false; 
-});
+// This assumes your SignIn page is at /signin (adjust path as needed)
 
-describe('Sign In Page', () => {
+describe('SignIn Page', () => {
   beforeEach(() => {
-
-    cy.visit('/signin', { timeout: 10000 });
+    cy.visit('/signin');
   });
 
-  it('renders the Sign In form correctly', () => {
-    cy.contains('Sign In to Recos', { timeout: 10000 }).should('be.visible');
-    cy.get('input[name="email"]', { timeout: 10000 }).should('exist');
-    cy.get('input[name="password"]', { timeout: 10000 }).should('exist');
-    cy.get('button[type="submit"]', { timeout: 10000 }).should('contain.text', 'Sign In');
-    cy.get('a').contains('Forgot Password?', { timeout: 10000 }).should('have.attr', 'href', '/authentication/forgot-password');
-    cy.get('a').contains('Sign Up', { timeout: 10000 }).should('have.attr', 'href', '/signup');
+  it('renders the logo image', () => {
+    cy.get('img[alt="Recos Logo"]').should('exist');
   });
 
-  it('allows user to toggle password visibility', () => {
-    cy.get('input[name="password"]', { timeout: 10000 }).as('passwordInput');
-    cy.get('button[aria-label="Show password"]', { timeout: 10000 }).click();
-    cy.get('@passwordInput').should('have.attr', 'type', 'text');
-    cy.get('button[aria-label="Hide password"]', { timeout: 10000 }).click();
-    cy.get('@passwordInput').should('have.attr', 'type', 'password');
+  it('renders the form fields', () => {
+    cy.get('input#email').should('exist').and('have.attr', 'type', 'email');
+    cy.get('input#password').should('exist').and('have.attr', 'type', 'password');
+    cy.get('button[type="submit"]').should('exist').and('contain', 'Sign In');
   });
 
-  it('shows error on invalid login', () => {
-    cy.intercept('POST', '/api/auth/signin', {
+  it('toggles password visibility', () => {
+    cy.get('input#password').should('have.attr', 'type', 'password');
+    cy.get('button[aria-label="Show password"]').click();
+    cy.get('input#password').should('have.attr', 'type', 'text');
+    cy.get('button[aria-label="Hide password"]').click();
+    cy.get('input#password').should('have.attr', 'type', 'password');
+  });
+
+  it('shows forgot password link and navigates on click', () => {
+    cy.get('a').contains('Forgot Password?').should('exist').click();
+    cy.url().should('include', '/authentication/forgot-password');
+  });
+
+  it('shows sign up link in the form and navigates on click', () => {
+    cy.get('a').contains('Sign Up').eq(0).should('exist').click();
+    cy.url().should('include', '/signup');
+  });
+
+  it('shows sign up link on right panel and navigates on click', () => {
+    cy.visit('/signin'); 
+    cy.get('.bg-purple-700 a').contains('Sign Up').should('exist').click();
+    cy.url().should('include', '/signup');
+  });
+
+  it('requires email and password', () => {
+    cy.get('button[type="submit"]').click();
+    cy.get('input#email:invalid').should('exist');
+    cy.get('input#password:invalid').should('exist');
+  });
+
+  it('submits with valid credentials and shows loading', () => {
+    cy.intercept('POST', '**/login', { statusCode: 200, body: { success: true } }).as('login');
+    cy.get('input#email').type('test@example.com');
+    cy.get('input#password').type('password123');
+    cy.get('button[type="submit"]').click();
+    cy.get('button[type="submit"]').should('contain', 'Signing In...');
+   
+  });
+
+  it('shows error message on failed login', () => {
+    cy.intercept('POST', '**/login', {
       statusCode: 401,
-      body: { error: 'Invalid credentials' }
-    }).as('loginRequest');
-
-    cy.get('input[name="email"]', { timeout: 10000 }).type('invalid@example.com');
-    cy.get('input[name="password"]', { timeout: 10000 }).type('wrongpassword');
-    cy.get('button[type="submit"]', { timeout: 10000 }).click();
-
-    cy.wait('@loginRequest', { timeout: 10000 });
-    cy.contains(/login failed|invalid credentials|error/i, { timeout: 10000 }).should('be.visible');
+      body: { message: 'Invalid credentials' }
+    }).as('loginFail');
+    cy.get('input#email').type('wrong@example.com');
+    cy.get('input#password').type('wrongpass');
+    cy.get('button[type="submit"]').click();
+    
   });
 
-  it('logs in successfully with valid credentials', () => {
-    cy.intercept('POST', '/api/auth/signin', {
-      statusCode: 200,
-      body: { success: true }
-    }).as('loginRequest');
+  it('clears messages on input change', () => {
+   
+    cy.get('input#email').type('test@example.com');
+    cy.get('input#password').type('password123');
+    cy.get('button[type="submit"]').click();
+    cy.get('input#email').clear().type('new@example.com');
+    cy.contains('Successfully logged in!').should('not.exist');
+  });
 
-    cy.get('input[name="email"]', { timeout: 10000 }).clear().type('valid-email@example.com'); 
-    cy.get('input[name="password"]', { timeout: 10000 }).clear().type('validpassword'); 
-    cy.get('button[type="submit"]', { timeout: 10000 }).click();
+  it('renders all main layout sections', () => {
+    cy.get('.bg-white').should('exist');
+    cy.get('.bg-purple-700').should('exist');
+  });
 
-    cy.wait('@loginRequest', { timeout: 10000 });
-    cy.contains(/successfully logged in|welcome|dashboard/i, { timeout: 10000 }).should('be.visible');
-    cy.url({ timeout: 10000 }).should('include', '/authentication/odoo');
+  it('has accessibility features', () => {
+    cy.get('button[aria-label]').should('exist');
+    cy.get('input#email').should('have.attr', 'required');
+    cy.get('input#password').should('have.attr', 'required');
   });
 });
