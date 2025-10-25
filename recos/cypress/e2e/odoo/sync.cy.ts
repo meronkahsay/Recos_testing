@@ -21,7 +21,6 @@ describe('Odoo Sync Page', () => {
   });
 
   it('shows error message on failed sync', () => {
-    // Simulate error UI:
     cy.window().then(win => {
       win.document.body.innerHTML += `
         <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
@@ -39,10 +38,7 @@ describe('Odoo Sync Page', () => {
     cy.get('input#apiKey').type('supersecret');
     cy.get('input[type="checkbox"]').check();
     cy.get('button[type="submit"]').click();
-    // Assert it shows Connecting...
-    // cy.get('button[type="submit"]').should('contain', 'Connecting...');
-    // If you want to assert disabled, and your UI supports it, add:
-    // cy.get('button[type="submit"]').should('be.disabled');
+    
   });
 
   it('opens Odoo site in new tab when clicking Create Odoo Account', () => {

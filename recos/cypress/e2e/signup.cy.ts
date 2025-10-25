@@ -42,11 +42,8 @@ describe("Signup Page", () => {
 
     cy.wait("@registerUser");
 
-    // Updated: Use targeted selector for success message container
-    // cy.get("p.text-green-600").should("contain.text", "Successfully registered!").and("be.visible");
 
     cy.wait(1000);
-    // cy.url().should("include", "/signin");
   });
 
   it("shows error if user already exists", () => {
@@ -63,7 +60,6 @@ describe("Signup Page", () => {
 
     cy.wait("@registerUserExists");
 
-    // cy.contains("User already exists. Please sign in.").should("be.visible");
   });
 
   it("displays error message on failure", () => {

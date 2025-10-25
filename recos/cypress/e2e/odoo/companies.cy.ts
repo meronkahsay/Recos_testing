@@ -25,10 +25,8 @@ describe('Odoo Companies Page', () => {
   });
 
   it('navigates to dashboard when a company is clicked', () => {
-    // Simulate the presence of a company button
     const testCompany = { company_id: '123', company_name: 'TestCompany' };
     cy.window().then(win => {
-      // Add a button to the DOM to simulate a loaded company
       const btn = win.document.createElement('button');
       btn.innerText = testCompany.company_name;
       btn.onclick = () => {
@@ -39,7 +37,6 @@ describe('Odoo Companies Page', () => {
     });
     cy.contains('TestCompany').click();
     cy.url().should('include', '/dashboard/123');
-    // Optionally, check localStorage
     cy.window().then(win => {
       const stored = win.localStorage.getItem('selectedCompany');
       expect(stored).to.not.be.null;

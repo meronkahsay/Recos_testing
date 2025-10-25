@@ -1,6 +1,5 @@
 /// <reference types="cypress" />
 
-// This assumes your SignIn page is at /signin (adjust path as needed)
 
 describe('SignIn Page', () => {
   beforeEach(() => {
@@ -47,15 +46,6 @@ describe('SignIn Page', () => {
     cy.get('input#password:invalid').should('exist');
   });
 
-  it('submits with valid credentials and shows loading', () => {
-    cy.intercept('POST', '**/login', { statusCode: 200, body: { success: true } }).as('login');
-    cy.get('input#email').type('test@example.com');
-    cy.get('input#password').type('password123');
-    cy.get('button[type="submit"]').click();
-    cy.get('button[type="submit"]').should('contain', 'Signing In...');
-   
-  });
-
   it('shows error message on failed login', () => {
     cy.intercept('POST', '**/login', {
       statusCode: 401,
@@ -86,4 +76,14 @@ describe('SignIn Page', () => {
     cy.get('input#email').should('have.attr', 'required');
     cy.get('input#password').should('have.attr', 'required');
   });
+
+  it('submits with valid credentials and navigates on success', () => {
+  cy.intercept('POST', '**/login', { statusCode: 200, body: { success: true } }).as('login');
+
+  cy.get('input#email').type('nebyat797@gmail.com');
+  cy.get('input#password').type('password');
+  cy.get('button[type="submit"]').click();
+
+  cy.url().should('include', '/authentication/odoo'); 
+});
 });
